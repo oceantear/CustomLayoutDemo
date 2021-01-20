@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="AutoScaleText">
+        <attr name="autoScale" format="float" />
+        <attr name="autoAlpha" format="float" />
+    </declare-styleable>
+
+    <declare-styleable name="WrapLayout">
+        <attr name="clickable" format="boolean" />
+        <attr name="textColor" format="color|reference" />
+        <attr name="textBackground" format="integer|reference" />
+        <attr name="enableMultiChoose" format="boolean" />
+        <attr name="scaleX" format="float" />
+    </declare-styleable>
+
+    <declare-styleable name="RoundImageView">
+        <attr name="imageType" format="enum">
+            <enum name="normal" value="0"/>
+            <enum name="round" value="1"/>
+            <enum name="circle" value="2"/>
+        </attr>
+        <attr name="roundBorder" format="boolean"/>
+        <attr name="roundBorderWidth" format="dimension"/>
+        <attr name="roundBorderColor" format="reference"/>
+    </declare-styleable>
+</resources>

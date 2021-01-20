@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.iisi.customlayoutdemo.custom.view.AutoScaleTextView
+        android:id="@+id/mytext"
+        android:text="我在這裡"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        app:autoScale="0.9"
+        app:autoAlpha="0.6"
+        android:background="@drawable/custom_bg"/>
+
+    <com.iisi.customlayoutdemo.custom.view.RoundImageView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        app:imageType ="circle"
+        android:src="@drawable/topic_menu_my_schedule"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="60dp"/>
+
+    <com.iisi.customlayoutdemo.custom.view.CustomButton
+        android:layout_below="@+id/mytext"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_round_corner_btn_red"
+        android:text="按鈕"
+        android:textColor="@color/white"/>
+
+    <!--<TextView
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"/>-->
+
+</RelativeLayout>

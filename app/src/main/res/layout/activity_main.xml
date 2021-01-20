@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/autoBt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="autoScaleText"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginTop="60dp"/>
+
+            <Button
+                android:id="@+id/flowBt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="flowLayout"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/autoBt"
+                android:layout_marginTop="60dp"/>
+
+            <Button
+                android:id="@+id/chipBt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="chipLayout"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/flowBt"
+                android:layout_marginTop="60dp"/>
+
+            <Button
+                android:id="@+id/rotationBt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="rotationBt"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/chipBt"
+                android:layout_marginTop="60dp"/>
+
+            <Button
+                android:id="@+id/buyCarBt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="buyCartBt"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/rotationBt"
+                android:layout_marginTop="60dp"/>
+
+            <Button
+                android:id="@+id/drawImageBt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="drawImageBt"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/buyCarBt"
+                android:layout_marginTop="60dp"/>
+
+            <Button
+                android:id="@+id/ovalImageBt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ovalImageBt"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/drawImageBt"
+                android:layout_marginTop="60dp"/>
+
+            <Button
+                android:id="@+id/maskImageBt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="maskImageBt"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ovalImageBt"
+                android:layout_marginTop="60dp"/>
+
+            <Button
+                android:id="@+id/screenShotBt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="screenShotBt"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/maskImageBt"
+                android:layout_marginTop="60dp"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
