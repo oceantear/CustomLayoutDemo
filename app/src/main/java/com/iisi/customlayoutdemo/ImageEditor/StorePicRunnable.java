@@ -10,6 +10,8 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import androidx.core.content.FileProvider;
+
 import com.iisi.customlayoutdemo.ImageEditor.listener.onStorePicListener;
 
 import java.io.File;
@@ -66,7 +68,9 @@ public class StorePicRunnable implements Runnable {
                 //if (file.exists())
                 //    file.delete();
                 fos = new FileOutputStream(file);
-                uri = Uri.fromFile(file);
+                //uri = Uri.fromFile(file);
+                Log.e("iisi","ctx.getPackageName() : "+ctx.getPackageName());
+                uri = FileProvider.getUriForFile(ctx, ctx.getPackageName() +".fileprovider", file);
             }
 
             bp.get().compress(Bitmap.CompressFormat.PNG, 20, fos);

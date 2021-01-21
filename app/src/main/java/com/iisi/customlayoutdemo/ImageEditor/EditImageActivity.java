@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -37,7 +39,6 @@ import java.util.Date;
 public class EditImageActivity extends AppCompatActivity {
 
     private ActivityEditImageBinding binding;
-    private boolean isEnableEdit, isThicknessEnable, isColorMenuEnable;
     private Uri imageUri;
     private Handler mStorePicHandler;
     private HandlerThread mStorePicThread;
@@ -54,33 +55,7 @@ public class EditImageActivity extends AppCompatActivity {
 
         if(getIntent().getExtras() != null){
             Bundle b = getIntent().getExtras();
-            String uriStr = b.getString("path", null);
-
-            /*if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-
-                if (!TextUtils.isEmpty(uriStr)) {
-                    String rootP = Environment.getExternalStorageDirectory().toString();
-                    photoPath = rootP + "/DCIM/Camera/" + uriStr;
-                    Bitmap bmp = BitmapFactory.decodeFile(photoPath);
-                    binding.drawableImageView.setImage(bmp);
-                    binding.drawableImageView.setIsEditable(true);
-                }
-
-            }else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                String imageStr = b.getString("uri", "");
-                if (!TextUtils.isEmpty(imageStr)) {
-                    imageUri = Uri.parse(imageStr);
-                    try {
-                        InputStream is = getContentResolver().openInputStream(imageUri);
-                        Bitmap bitmap = BitmapFactory.decodeStream(is);
-                        is.close();
-                        binding.drawableImageView.setImage(bitmap);
-                        binding.drawableImageView.setIsEditable(true);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }*/
+            //String uriStr = b.getString("path", null);
 
             String imageStr = b.getString("uri", "");
             if (!TextUtils.isEmpty(imageStr)) {
@@ -97,27 +72,77 @@ public class EditImageActivity extends AppCompatActivity {
             }
         }
 
-        binding.menuColor.setOnClickListener(new View.OnClickListener() {
+        binding.alphaSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
-            public void onClick(View v) {
-                if(binding.thicknessMenu.getVisibility() == View.VISIBLE) {
-                    binding.thicknessMenu.setVisibility(View.GONE);
-                    isThicknessEnable = !isThicknessEnable;
-                }
-                isColorMenuEnable = !isColorMenuEnable;
-                binding.colorMenu.setVisibility(isColorMenuEnable ? View.VISIBLE : View.GONE);
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) { }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                int progress = seekBar.getProgress();
+                int alpha = (int)Math.round((255d / 100) * progress);
+                if(alpha > 255)
+                    alpha = 255;
+                else if(alpha < 0)
+                    alpha = 0;
+                binding.drawableImageView.setPaintAlpha(alpha);
             }
         });
 
-        binding.menuThickness.setOnClickListener(new View.OnClickListener() {
+        binding.thicknessSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                int progress = seekBar.getProgress();
+                float sWidth = dp2pixel(progress / 10);
+                binding.drawableImageView.setPaintStroke(sWidth);
+            }
+        });
+
+        binding.colorBlackBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(binding.colorMenu.getVisibility() == View.VISIBLE) {
-                    isColorMenuEnable = !isColorMenuEnable;
-                    binding.colorMenu.setVisibility(View.GONE);
-                }
-                isThicknessEnable = !isThicknessEnable;
-                binding.thicknessMenu.setVisibility(isThicknessEnable ? View.VISIBLE : View.GONE);
+                binding.drawableImageView.setPaintColor(Color.BLACK);
+            }
+        });
+
+        binding.colorRedBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                binding.drawableImageView.setPaintColor(Color.RED);
+
+            }
+        });
+
+        binding.cleanBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                binding.drawableImageView.cleanCanvas();
+            }
+        });
+
+        binding.undoBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                binding.drawableImageView.unDo();
+            }
+        });
+
+        binding.redoBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                binding.drawableImageView.reDo();
             }
         });
 
@@ -147,37 +172,17 @@ public class EditImageActivity extends AppCompatActivity {
             }
         });
 
-        binding.strokeWidthBt1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                binding.drawableImageView.setPaintStroke(dp2pixel(5));
-            }
-        });
-
-        binding.strokeWidthBt2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                binding.drawableImageView.setPaintStroke(dp2pixel(10));
-            }
-        });
-
-        binding.strokeWidthBt3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                binding.drawableImageView.setPaintStroke(dp2pixel(15));
-            }
-        });
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mStorePicThread.quitSafely();
         try {
-            mStorePicThread.join();
+            if(mStorePicThread != null) mStorePicThread.quitSafely();
+            if(mStorePicThread != null) mStorePicThread.join();
             mStorePicThread = null;
             mStorePicHandler = null;
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

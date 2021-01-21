@@ -9,28 +9,30 @@ import android.graphics.CornerPathEffect;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
+import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.View;
-
 import androidx.appcompat.widget.AppCompatImageView;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class DrawableImageView extends AppCompatImageView implements View.OnTouchListener
 {
-    float downx = 0;
-    float downy = 0;
-    float upx = 0;
-    float upy = 0;
-
-    private Canvas canvas;
+    private Canvas mCanvas;
     private Paint paint;
+    private Paint mDrawableImagePaint;
     private Matrix matrix;
-    private List<Path> mDrawPath;
+    private Path mPath;
+    private List<Path> mHistoryPath;
+    private List<Pair<Path, Paint>> mHistoryPathInfo;
+    private List<Pair<Path, Paint>> mUnDoHistoryPathInfo;
+    private Bitmap bp;
     private boolean mIsEditable = false;
+    private int mPaintColor;
+    private float mPaintStrokeWidth;
+    private int mPaintAlpha = 255;
+    private boolean IsDrawNowPath;
 
     public DrawableImageView(Context context)
     {
@@ -57,12 +59,26 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        //this.canvas = canvas;
+
+        canvas.drawBitmap(bp, 0, 0, mDrawableImagePaint);
+
+        if(IsDrawNowPath){
+            canvas.drawPath(mPath, paint);
+            IsDrawNowPath = false;
+        }
+
+        for(Pair<Path, Paint> p : mHistoryPathInfo) {
+            canvas.drawPath(p.first, p.second);
+        }
+
     }
 
     public void init(){
+
+        mDrawableImagePaint = new Paint();
+
         paint = new Paint();
-        paint.setColor(Color.GREEN);
+        paint.setColor(Color.BLACK);
         paint.setStrokeWidth(5);
         paint.setAntiAlias(true);
         paint.setDither(true);
@@ -70,102 +86,135 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
         paint.setPathEffect(new CornerPathEffect(100));
         paint.setStrokeCap(Paint.Cap.ROUND);
         paint.setStrokeJoin(Paint.Join.ROUND);
-        mDrawPath = new ArrayList<>();
-    }
-
-    public void setNewImage(Bitmap alteredBitmap, Bitmap bmp)
-    {
-        canvas = new Canvas(alteredBitmap );//新的bitmap
-        /*paint = new Paint();
-        paint.setColor(Color.GREEN);
-        paint.setStrokeWidth(5);*/
-        matrix = new Matrix();
-        canvas.drawBitmap(bmp, matrix, paint);
-
-        setImageBitmap(alteredBitmap);
+        mPaintColor = Color.BLACK;
+        mPaintStrokeWidth = paint.getStrokeWidth();
+        mPath = new Path();
+        mHistoryPath = new ArrayList<>();
+        mHistoryPathInfo = new ArrayList<>();
+        mUnDoHistoryPathInfo = new ArrayList<>();
     }
 
     public void setImage(Bitmap bmp){
-        Bitmap bp = bmp.copy(Bitmap.Config.ARGB_8888, true);
-        Bitmap alteredBitmap = Bitmap.createBitmap(bp.getWidth(),
-                bp.getHeight(), bp.getConfig());
-
-        canvas = new Canvas(alteredBitmap);
-        matrix = new Matrix();
-        canvas.drawBitmap(bp, matrix, paint);
-
-        setImageBitmap(alteredBitmap);
-    }
-
-    public void setImage(int resId){
-        setImageResource(resId);
-        Bitmap bp = ((BitmapDrawable)getDrawable()).getBitmap().copy(Bitmap.Config.ARGB_8888, true);
-        Bitmap alteredBitmap = Bitmap.createBitmap(bp.getWidth(),
-                bp.getHeight(), bp.getConfig());
-        canvas = new Canvas(alteredBitmap);
-
-        matrix = new Matrix();
-
-        canvas.drawBitmap(bp, matrix, paint);
-
-        setImageBitmap(alteredBitmap);
-
+        bp = bmp;
     }
 
     public Bitmap getBitmap(){
-        return ((BitmapDrawable)getDrawable()).getBitmap();
+        Bitmap bmp = Bitmap.createBitmap(bp.getWidth(),
+                bp.getHeight(), bp.getConfig());
+        Canvas cv = new Canvas(bmp);
+        cv.drawBitmap(bp, 0, 0, paint);
+        for(Pair<Path, Paint> p : mHistoryPathInfo) {
+            cv.drawPath(p.first, p.second);
+        }
+        return bmp;
     }
 
     @SuppressLint("ResourceAsColor")
     public void setPaintColor(int color){
-        if(paint != null)
-            paint.setColor(getResources().getColor(color, null));
+        if(paint != null) {
+            mPaintColor = getResources().getColor(color, null);
+            paint.setColor(mPaintColor);
+        }
     }
 
     public void setPaintStroke(float strokeWidth){
-        if(paint != null)
+        if(paint != null) {
             paint.setStrokeWidth(strokeWidth);
+            mPaintStrokeWidth = strokeWidth;
+        }
     }
+
+    public void setPaintAlpha(int alpha){
+        if(paint != null) {
+            mPaintAlpha = alpha;
+            paint.setAlpha(mPaintAlpha);
+        }
+    }
+
+    public void unDo(){
+        if(mHistoryPathInfo.size() > 0) {
+            mUnDoHistoryPathInfo.add(mHistoryPathInfo.remove(mHistoryPathInfo.size() - 1));
+            invalidate();
+        }
+    }
+
+    public void reDo(){
+        if(mUnDoHistoryPathInfo.size() > 0){
+            mHistoryPathInfo.add(mUnDoHistoryPathInfo.remove(mUnDoHistoryPathInfo.size() - 1));
+            invalidate();
+        }
+    }
+
+    public void cleanCanvas(){
+        mHistoryPathInfo.clear();
+        invalidate();
+    }
+
+    public void setIsEditable(boolean isEditable){mIsEditable = isEditable ;}
+
+    private void resetPaint(){
+        paint = new Paint();
+        paint.setColor(mPaintColor);
+        paint.setStrokeWidth(mPaintStrokeWidth);
+        paint.setAlpha(mPaintAlpha);
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setPathEffect(new CornerPathEffect(100));
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeJoin(Paint.Join.ROUND);
+    }
+
+    private float mX, mY;
+    private static final float TOUCH_TOLERANCE = 4;
+
+    private void touch_start(float x, float y) {
+        mPath.reset();
+        mPath.moveTo(x, y);
+        mX = x;
+        mY = y;
+    }
+
+    private void touch_move(float x, float y) {
+        float dx = Math.abs(x - mX);
+        float dy = Math.abs(y - mY);
+        if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
+            mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
+            mX = x;
+            mY = y;
+        }
+        IsDrawNowPath = true;
+    }
+
+    private void touch_up() {
+        mPath.lineTo(mX, mY);
+        mHistoryPath.add(mPath);
+        mHistoryPathInfo.add(new Pair<Path, Paint>(mPath, paint));
+        mPath = new Path();
+        resetPaint();
+    }
+
 
 
     @Override
     public boolean onTouch(View v, MotionEvent event)
     {
+        float x = event.getX();
+        float y = event.getY();
+
         if(mIsEditable) {
             int action = event.getAction();
 
             switch (action) {
                 case MotionEvent.ACTION_DOWN:
-                    downx = getPointerCoords(event)[0];//event.getX();
-                    downy = getPointerCoords(event)[1];//event.getY();
-                    //downx = event.getX();
-                    //downy = event.getY();
+                    touch_start(x, y);
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    upx = getPointerCoords(event)[0];//event.getX();
-                    upy = getPointerCoords(event)[1];//event.getY();
-                    //upx = event.getX();
-                    //upy = event.getY();
-                    //Path p = new Path();
-                    //p.lineTo(downx, downy);
-                    //p.lineTo(upx, upy);
-                    //canvas.drawPath(p, paint);
-                    canvas.drawLine(downx, downy, upx, upy, paint);
+                    touch_move(x, y);
                     invalidate();
-                    downx = upx;
-                    downy = upy;
                     break;
                 case MotionEvent.ACTION_UP:
-                    upx = getPointerCoords(event)[0];//event.getX();
-                    upy = getPointerCoords(event)[1];//event.getY();
-                    //upx = event.getX();
-                    //upy = event.getY();
-                    //Path p1 = new Path();
-                    //p1.lineTo(downx, downy);
-                    //p1.lineTo(upx, upy);
-                    //canvas.drawPath(p1, paint);
-                    canvas.drawLine(downx, downy, upx, upy, paint);
-                    invalidate();
+                    touch_up();
                     break;
                 case MotionEvent.ACTION_CANCEL:
                     break;
@@ -176,23 +225,4 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
         }
         return true;
     }
-
-    final float[] getPointerCoords(MotionEvent e)
-    {
-        final int index = e.getActionIndex();
-        final float[] coords = new float[] { e.getX(index), e.getY(index) };
-        Matrix matrix = new Matrix();
-        //Log.e("iisi","matrix :　"+matrix.toString());
-        //Log.e("iisi","ImageMatrix :　"+getImageMatrix());
-        getImageMatrix().invert(matrix);
-        //Log.e("iisi","invert ImageMatrix :　"+matrix.toString());
-        //Log.e("iisi","getScrollX :　"+getScrollX());
-        //Log.e("iisi","getScrollY :　"+getScrollY());
-        matrix.postTranslate(getScrollX(), getScrollY());
-        matrix.mapPoints(coords);
-        return coords;
-    }
-
-    public void setIsEditable(boolean isEditable){mIsEditable = isEditable ;}
-
 }

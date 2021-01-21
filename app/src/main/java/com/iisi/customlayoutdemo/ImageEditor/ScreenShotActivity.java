@@ -24,6 +24,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.iisi.customlayoutdemo.ImageEditor.listener.ScreenAnimatorListener;
 import com.iisi.customlayoutdemo.ImageEditor.listener.onStorePicListener;
+import com.iisi.customlayoutdemo.R;
 import com.iisi.customlayoutdemo.databinding.ActivityScreenShotBinding;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -79,6 +80,7 @@ public class ScreenShotActivity extends AppCompatActivity {
                                 b.putString("uri", uri.toString());
                                 i.putExtras(b);
                                 startActivity(i);
+                                overridePendingTransition(0, 0);
                             }
 
                             @Override
@@ -108,20 +110,19 @@ public class ScreenShotActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        mStorePicThread.quitSafely();
+
         try {
+            mStorePicThread.quitSafely();
             mStorePicThread.join();
             mStorePicThread = null;
             mStorePicHandler = null;
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private void getScreenShotPath(View v){
 
-        //View rootView = getWindow().getDecorView().getRootView();
-        //rootView.setDrawingCacheEnabled(true);
         Bitmap b = null;
         v.setDrawingCacheEnabled(true);
         b = Bitmap.createBitmap(v.getDrawingCache());
@@ -149,22 +150,6 @@ public class ScreenShotActivity extends AppCompatActivity {
                     msg.what = 0;
                     msg.obj = uri;
                     mHandler.sendMessage(msg);
-
-                    /*runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            DisplayMetrics displayMetrics = new DisplayMetrics();
-                            getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-                            int height = displayMetrics.heightPixels;
-                            int width = displayMetrics.widthPixels;
-
-                            binding.screenShotAnimateView.setVisibility(View.GONE);
-                            binding.screenShotAnimateView.setPath(null, width, height, true, uri);
-                        }
-                    });*/
-
-
                 }
             }
         }));

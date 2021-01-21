@@ -40,7 +40,7 @@ public class ScreenAnimateView extends CardView {
     private ObjectAnimator mTranslationYAnim = null;
 
     private ScreenAnimatorListener mListener;
-    private long mDelayAfterAnimator = 2*1000;//秒
+    private long mDelayAfterAnimator = 1*1000;//秒
 
     public ScreenAnimateView(@NonNull Context context) {
         super(context);
@@ -75,7 +75,6 @@ public class ScreenAnimateView extends CardView {
     private void init(Context context) {
         mHandler = new Handler(Looper.getMainLooper());
         setCardElevation(20);
-        //setCardBackgroundColor(getResources().getColor(R.color.yellow, null));
         setRadius(dp2pixel(20));
     }
 
@@ -89,11 +88,11 @@ public class ScreenAnimateView extends CardView {
         int padding = (int) dp2pixel(2);
         int margins = (int) dp2pixel(8);
 
-        //设置截图之后的宽度，高度按照比例设置
+        //截圖之後的寬度，高度按照比例設置
         mFinalW = (int) dp2pixel(90);
         mFinalH = (int) ((float) mFinalW * h) / w;
         if (!anim) {
-            //设置边框
+            //邊框
             params.setMargins(margins, margins, margins, margins);
             margins = (int) dp2pixel(2);
             params.width = mFinalW + margins * 2;
@@ -106,7 +105,7 @@ public class ScreenAnimateView extends CardView {
             setLayoutParams(params);
             requestLayout();
         } else {
-            //设置边框
+            //邊框
             thumbParams.setMargins(margins, margins, margins, margins);
             params.setMargins(0, 0, 0, 0);
             params.width = FrameLayout.LayoutParams.MATCH_PARENT;
@@ -127,32 +126,6 @@ public class ScreenAnimateView extends CardView {
                 }
                 setRadius((int) dp2pixel(radius));
 
-                //显示截图（添加圆角）
-                /*Glide.with(getContext())
-                        .load(new File(path))
-                        .transform(new CenterCrop(getContext()), new GlideRoundTransform(getContext(), radius))
-                        .crossFade()
-                        .listener(new RequestListener<File, GlideDrawable>() {
-                            @Override
-                            public boolean onException(Exception e, File model, Target<GlideDrawable> target, boolean isFirstResource) {
-                                if (anim) {
-                                    anim(thumb, true);
-                                }
-                                return false;
-                            }
-
-                            @Override
-                            public boolean onResourceReady(GlideDrawable resource, File model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
-                                if (thumb.getDrawable() == null) {
-                                    // 避免截图成功时出现短暂的全屏白色背景
-                                    thumb.setImageDrawable(resource);
-                                }
-                                if (anim) {
-                                    anim(thumb, true);
-                                }
-                                return false;
-                            }
-                        }).into(thumb);*/
                 Glide.with(getContext())
                      .load(uri)
                      .centerCrop()
@@ -168,7 +141,7 @@ public class ScreenAnimateView extends CardView {
                          @Override
                          public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
                              if (thumb.getDrawable() == null) {
-                                 // 避免截图成功时出现短暂的全屏白色背景
+                                 // 避免截圖成功時出現短暫的白色背景
                                  thumb.setImageDrawable(resource);
                              }
                              if (anim) {
@@ -178,21 +151,21 @@ public class ScreenAnimateView extends CardView {
                          }
                      }).into(thumb);
 
-                //启动延时关闭截图（显示5秒消失截图）
+                //延遲關閉截圖
                 startTick(true);
             }
         });
     }
 
     /**
-     * 动画设置
+     * Animation
      * @param view
      * @param start
      */
     private void anim(final ImageView view, boolean start) {
         if (!start) {
             if (getChildCount() > 0) {
-                // 快速点击截图时，上一次添加的子视图尚未移除，需重置视图
+                // 快速點擊截圖，上一次的view 尚未移除，reset view
                 resetView();
             }
             setScaleX(1f);
@@ -223,19 +196,19 @@ public class ScreenAnimateView extends CardView {
             @Override
             public void run() {
                 if (!view.isAttachedToWindow()) {
-                    // 子视图已被移除
+                    // View 被移除
                     return;
                 }
                 setCardBackgroundColor(Color.WHITE);
 
-                //等待cross fade动画
+                //等待cross fade動畫
                 float margins = dp2pixel(10);
                 float scaleToX = (float) mFinalW / getMeasuredWidth();
                 float scaleToY = (float) mFinalH / getMeasuredHeight();
                 float translateToX = -(getMeasuredWidth() / 2f - (mFinalW / 2 + margins));
                 float translateToY = getMeasuredHeight() / 2f - (mFinalH / 2f + margins);
 
-                //以当前view为中心，x轴右为正，左为负；y轴下为正，上为负
+                //以當前view為中心，x軸右為正，左為負，y軸下為正，上為負
 
                 mScaleXAnim = ObjectAnimator.ofFloat(ScreenAnimateView.this, "scaleX", 1.0f, scaleToX);
                 mScaleYAnim = ObjectAnimator.ofFloat(ScreenAnimateView.this, "scaleY", 1.0f, scaleToY);
@@ -243,13 +216,13 @@ public class ScreenAnimateView extends CardView {
                 mTranslationXAnim = ObjectAnimator.ofFloat(ScreenAnimateView.this, "translationX", 1.0f, translateToX);
                 mTranslationYAnim = ObjectAnimator.ofFloat(ScreenAnimateView.this, "translationY", 1.0f, translateToY);
 
-                //设置速度
+                //速度
                 mScaleXAnim.setDuration(500);
                 mScaleYAnim.setDuration(500);
                 mTranslationXAnim.setDuration(500);
                 mTranslationYAnim.setDuration(500);
 
-                //缩放
+                //縮放
                 mScaleXAnim.start();
                 mScaleYAnim.start();
                 //平移
