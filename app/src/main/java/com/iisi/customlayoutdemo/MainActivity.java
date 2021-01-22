@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import com.iisi.customlayoutdemo.ImageEditor.ScreenShotActivity;
 import com.iisi.customlayoutdemo.custom.view.FlowLayout;
+import com.iisi.customlayoutdemo.custom.view.PostScaleImageView;
 import com.iisi.customlayoutdemo.custom.view.WrapLayout;
 import com.iisi.customlayoutdemo.vo.FlowLayoutContent;
 
@@ -109,6 +110,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, ScreenShotActivity.class));
+            }
+        });
+
+        Button postTranslateBt = (Button) findViewById(R.id.postTranslateBt);
+        postTranslateBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, PostTranslateActivity.class));
+            }
+        });
+
+        Button postScaleBt = (Button) findViewById(R.id.postScaleBt);
+        postScaleBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, PostScaleActivity.class));
             }
         });
 

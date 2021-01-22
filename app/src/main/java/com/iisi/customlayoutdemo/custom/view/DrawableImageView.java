@@ -9,16 +9,24 @@ import android.graphics.CornerPathEffect;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PointF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.View;
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.constraintlayout.widget.ConstraintSet;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class DrawableImageView extends AppCompatImageView implements View.OnTouchListener
 {
+    private  static final int MODE_DRAW = 1;
+    private static final int MODE_ZOOM_SCALE = 2;
+    private int mode = 0;//normal mode
+
     private Canvas mCanvas;
     private Paint paint;
     private Paint mDrawableImagePaint;
@@ -33,6 +41,20 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
     private float mPaintStrokeWidth;
     private int mPaintAlpha = 255;
     private boolean IsDrawNowPath;
+
+    private float startDis;
+
+    private Matrix matrixNow = new Matrix();
+    private Matrix matrixBefore = new Matrix();
+    private PointF startPoint = new PointF();
+    private PointF nowPoint = new PointF();
+    private PointF midPoint = new PointF(0,0);
+    private Matrix mInitializationMatrix = new Matrix();//初始缩放值
+    private PointF mInitializationScalePoint = new PointF();//初始缩放点
+    private PointF mCurrentScalePoint = new PointF(0, 0);//当前缩放点
+
+    private static final float MAX_SCALE = 4f, MIN_SCALE = 1f;//最大放大倍数，最小放大倍数
+    float total_scale = MIN_SCALE , current_scale;//total_scale缩放范围2-1，当小于1回弹到1；当大于2回弹到2
 
     public DrawableImageView(Context context)
     {
@@ -60,7 +82,10 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        canvas.drawBitmap(bp, 0, 0, mDrawableImagePaint);
+        if(matrixNow != null){
+            canvas.drawBitmap(bp, matrixNow, mDrawableImagePaint);
+        }else
+            canvas.drawBitmap(bp, 0, 0, mDrawableImagePaint);
 
         if(IsDrawNowPath){
             canvas.drawPath(mPath, paint);
@@ -70,6 +95,14 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
         for(Pair<Path, Paint> p : mHistoryPathInfo) {
             canvas.drawPath(p.first, p.second);
         }
+
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        Log.e("iisi", "onSizeChanged width : "+w +" height : "+h);
+        mInitializationScalePoint.set( w / 2, h / 2);//初始化缩放位置
 
     }
 
@@ -107,6 +140,10 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
             cv.drawPath(p.first, p.second);
         }
         return bmp;
+    }
+
+    public void addText(){
+
     }
 
     @SuppressLint("ResourceAsColor")
@@ -147,6 +184,11 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
 
     public void cleanCanvas(){
         mHistoryPathInfo.clear();
+        invalidate();
+    }
+
+    public void scaleSize(float scale_size){
+        matrixNow.postScale(scale_size, scale_size, midPoint.x, midPoint.y);
         invalidate();
     }
 
@@ -194,8 +236,6 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
         resetPaint();
     }
 
-
-
     @Override
     public boolean onTouch(View v, MotionEvent event)
     {
@@ -205,16 +245,67 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
         if(mIsEditable) {
             int action = event.getAction();
 
-            switch (action) {
+            switch (action & MotionEvent.ACTION_MASK) {
                 case MotionEvent.ACTION_DOWN:
+                    Log.e("iisi","ACTION_DOWN mode : "+mode);
+                    mode = MODE_DRAW;
                     touch_start(x, y);
                     break;
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    Log.e("iisi","ACTION_POINTER_DOWN : "+mode);
+                    mode = MODE_ZOOM_SCALE;
+                    startPoint.set(event.getX(), event.getY());
+                    startDis = distance(event);
+                    if (startDis > 10f) {
+                        //紀錄縮放倍數
+                        matrixBefore.set(getImageMatrix());
+                        matrixNow.set(getImageMatrix());
+                    }
+                    break;
                 case MotionEvent.ACTION_MOVE:
-                    touch_move(x, y);
-                    invalidate();
+                    Log.e("iisi","ACTION_MOVE : "+mode);
+                    if(mode == MODE_DRAW) {
+                        touch_move(x, y);
+                        invalidate();
+                    }else if(mode == MODE_ZOOM_SCALE && event.getPointerCount() >= 2 ){
+                        nowPoint.set(event.getX(), event.getY());
+                        float endDis = distance(event);
+                        float moveDis = Math.abs(endDis - startDis);
+                        Log.e("iisi","start dis : "+ startDis + " end dis : " + endDis +" move distance : "+moveDis);
+
+                        if (moveDis > 10f) {
+                            midPoint = mid(event);
+                            current_scale = endDis / startDis;//缩放倍数
+                            total_scale *= current_scale;
+                            Log.e("iisi","total scale : "+total_scale + " current scale : "+current_scale);
+                            Log.e("iisi","mid x : "+midPoint.x + " mid y : "+midPoint.y);
+                            //matrixNow.postTranslate((midPoint.x + event.getX()) /2, (midPoint.y + event.getY()) /2);
+                            matrixNow.postScale(current_scale, current_scale, midPoint.x, midPoint.y);
+                            startDis = endDis;
+                            invalidate();
+                        }
+                    }
+
                     break;
                 case MotionEvent.ACTION_UP:
-                    touch_up();
+                    Log.e("iisi","ACTION_UP : "+mode);
+                    if(mode == MODE_DRAW)
+                        touch_up();
+                    else if(mode == MODE_ZOOM_SCALE)
+                        mode = MODE_DRAW;
+                    break;
+                case MotionEvent.ACTION_POINTER_UP:
+                    Log.e("iisi","ACTION_POINTER_UP : "+mode);
+                    if(mode == MODE_ZOOM_SCALE) {
+                        //checkZoomValid();
+                        /*postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                mode = MODE_DRAG;
+                            }
+                        },500);*/
+
+                    }
                     break;
                 case MotionEvent.ACTION_CANCEL:
                     break;
@@ -224,5 +315,60 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
 
         }
         return true;
+    }
+
+    private float distance(MotionEvent event) {
+        float dx = 0, dy = 0;
+        try {
+            dx = event.getX(1) - event.getX(0);
+            dy = event.getY(1) - event.getY(0);
+        }catch (IllegalArgumentException e){
+            e.printStackTrace();
+        }
+        return (float) Math.sqrt(dx * dx + dy * dy);
+    }
+
+    private PointF mid(MotionEvent event) {
+        float midX = 0, midY = 0;
+        try {
+            midX = (event.getX(1) + event.getX(0)) / 2;
+            midY = (event.getY(1) + event.getY(0)) / 2;
+        }catch (IllegalArgumentException e){
+            e.printStackTrace();
+        }
+        return new PointF(midX, midY);
+    }
+
+    private boolean checkZoomValid() {
+        if(mode == MODE_ZOOM_SCALE){
+            if(total_scale > MAX_SCALE){
+                Log.e("iisi", "大於 最大scale");
+                resetToMaxStatus();
+                matrixNow.set(mInitializationMatrix);
+                matrixNow.postScale(MAX_SCALE, MAX_SCALE, mInitializationScalePoint.x, mInitializationScalePoint.y);
+                matrixNow.postTranslate(mCurrentScalePoint.x, mCurrentScalePoint.y);
+                invalidate();
+                return false;
+            }else if(total_scale < MIN_SCALE){
+                Log.e("iisi", "小於 最小scale");
+                resetToMinStatus();
+                matrixNow.set(mInitializationMatrix);
+                invalidate();
+                return false;
+            }
+            invalidate();
+        }
+        return true;
+    }
+
+
+    //最小重置数值
+    private void resetToMinStatus(){
+        mCurrentScalePoint.set(0, 0);
+        total_scale = MIN_SCALE;
+    }
+    //最大重置数值
+    private void resetToMaxStatus(){
+        total_scale = MAX_SCALE;
     }
 }

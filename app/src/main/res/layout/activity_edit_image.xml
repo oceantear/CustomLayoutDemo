@@ -49,12 +49,32 @@
         app:layout_constraintTop_toTopOf="@id/color_black_bt"
         app:layout_constraintStart_toEndOf="@id/color_black_bt"/>
 
+    <TextView
+        android:id="@+id/scaleBt"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginEnd="16dp"
+        android:text="2"
+        android:textSize="18dp"
+        android:gravity="center"
+        app:layout_constraintTop_toTopOf="@id/color_black_bt"
+        app:layout_constraintEnd_toStartOf="@id/shareBt"/>
+
     <ImageView
         android:id="@+id/shareBt"
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:layout_marginEnd="16dp"
         android:src="@drawable/ic_baseline_share_24"
+        app:layout_constraintTop_toTopOf="@id/color_black_bt"
+        app:layout_constraintEnd_toStartOf="@id/addTextBt"/>
+
+    <ImageView
+        android:id="@+id/addTextBt"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginEnd="16dp"
+        android:src="@drawable/ic_baseline_title_24"
         app:layout_constraintTop_toTopOf="@id/color_black_bt"
         app:layout_constraintEnd_toStartOf="@id/cleanBt"/>
 

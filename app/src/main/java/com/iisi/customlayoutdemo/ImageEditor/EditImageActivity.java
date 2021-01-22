@@ -43,6 +43,7 @@ public class EditImageActivity extends AppCompatActivity {
     private Handler mStorePicHandler;
     private HandlerThread mStorePicThread;
     private long mLastClickTime;
+    private int i = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,6 +123,23 @@ public class EditImageActivity extends AppCompatActivity {
             public void onClick(View v) {
                 binding.drawableImageView.setPaintColor(Color.RED);
 
+            }
+        });
+
+        binding.addTextBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+
+
+        binding.scaleBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                binding.drawableImageView.scaleSize(i++);
             }
         });
 
