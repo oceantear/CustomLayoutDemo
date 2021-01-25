@@ -3,11 +3,15 @@ package com.iisi.customlayoutdemo.custom.view;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.CornerPathEffect;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -15,7 +19,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PostScaleImageView extends AppCompatImageView implements View.OnTouchListener {
+
+    private static final int DRAW_MODE = 0;
+    private static final int SCALE_MODE = 1;
+    private int mMode = DRAW_MODE;
 
 
     private PointF midPoint = new PointF(0,0);
@@ -33,6 +44,11 @@ public class PostScaleImageView extends AppCompatImageView implements View.OnTou
     private float scaleBase = 1f;
     private float current_scale;
     private float total_scale = 1f;
+
+    private Path mPath;
+    private List<Path> mHistoryPath;
+    private List<Pair<Path, Paint>> mHistoryPathInfo;
+    private Paint paint;
 
 
     public PostScaleImageView(@NonNull Context context) {
@@ -59,6 +75,13 @@ public class PostScaleImageView extends AppCompatImageView implements View.OnTou
             else
                 canvas.drawBitmap(bp, midPoint.x, midPoint.y, mDrawableImagePaint);
         }
+
+        for(Pair<Path, Paint> p : mHistoryPathInfo) {
+            canvas.drawPath(p.first, p.second);
+        }
+
+        canvas.drawPath(mPath, paint);
+
     }
 
     @Override
@@ -70,6 +93,19 @@ public class PostScaleImageView extends AppCompatImageView implements View.OnTou
     private void init(){
         mDrawableImagePaint = new Paint();
         setOnTouchListener(this);
+
+        mPath = new Path();
+        mHistoryPath = new ArrayList<>();
+        mHistoryPathInfo = new ArrayList<>();
+        paint = new Paint();
+        paint.setColor(Color.RED);
+        paint.setStrokeWidth(5);
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setPathEffect(new CornerPathEffect(100));
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeJoin(Paint.Join.ROUND);
     }
 
     public void setBitmap(Bitmap bmp){
@@ -106,13 +142,14 @@ public class PostScaleImageView extends AppCompatImageView implements View.OnTou
         switch (action & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
                 Log.e("iisi","ACTION_DOWN mode : ");
-                //matrixBefore.set(getImageMatrix());
-                //matrixNow.set(getImageMatrix());
+                mMode = DRAW_MODE;
+                touch_start(x, y);
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 Log.e("iisi","ACTION_POINTER_DOWN : ");
-                if(event.getPointerCount() >= 2){
+                mMode = SCALE_MODE;
 
+                if(event.getPointerCount() >= 2){
                     scaleCenter.set(mid(event));
                     startScalePoint.set(event.getX(), event.getY());
                     startDis = distance(event);
@@ -126,28 +163,37 @@ public class PostScaleImageView extends AppCompatImageView implements View.OnTou
                 break;
             case MotionEvent.ACTION_MOVE:
                 Log.e("iisi","ACTION_MOVE : ");
-                if(event.getPointerCount() >= 2) {
 
-                    midPoint = mid(event);
-                    float endDis = distance(event);
-                    float moveDis = Math.abs(distance(event) - startDis);
-                    if(moveDis > 10f) {
-                        current_scale = (endDis / startDis) * scaleBase;
-                        total_scale *= current_scale;
-                        Log.e("jimmy", "move dis : " + moveDis);
-                        Log.e("jimmy", "current_scale : " + current_scale);
-                        Log.e("jimmy", "scaleCenter x : " + midPoint.x + " scaleCenter y : " + midPoint.y);
-                        matrixNow.postScale(current_scale, current_scale, midPoint.x, midPoint.y);
-                        startDis = endDis;
-                        invalidate();
+                if(mMode == DRAW_MODE){
+                    touch_move(x, y);
+                    invalidate();
+                }else if(mMode == SCALE_MODE) {
+                    if (event.getPointerCount() >= 2) {
+                        midPoint = mid(event);
+                        float endDis = distance(event);
+                        float moveDis = Math.abs(distance(event) - startDis);
+                        if (moveDis > 10f) {
+                            current_scale = (endDis / startDis) * scaleBase;
+                            total_scale *= current_scale;
+                            Log.e("jimmy", "move dis : " + moveDis);
+                            Log.e("jimmy", "current_scale : " + current_scale);
+                            Log.e("jimmy", "scaleCenter x : " + midPoint.x + " scaleCenter y : " + midPoint.y);
+                            matrixNow.postScale(current_scale, current_scale, midPoint.x, midPoint.y);
+                            startDis = endDis;
+                            invalidate();
+                        }
                     }
                 }
 
                 break;
             case MotionEvent.ACTION_UP:
                 Log.e("iisi","ACTION_UP : ");
-                lastPoint = new PointF();
-
+                if(mMode == DRAW_MODE)
+                    touch_up();
+                else if(mMode == SCALE_MODE){
+                    mMode = DRAW_MODE;
+                    lastPoint = new PointF();
+                }
             case MotionEvent.ACTION_POINTER_UP:
                 Log.e("iisi","ACTION_POINTER_UP : ");
                 break;
@@ -157,6 +203,48 @@ public class PostScaleImageView extends AppCompatImageView implements View.OnTou
                 break;
         }
         return true;
+    }
+
+    private float mX, mY;
+    private static final float TOUCH_TOLERANCE = 4;
+
+    private void touch_start(float x, float y) {
+        mPath.reset();
+        mPath.moveTo(x, y);
+        mX = x;
+        mY = y;
+    }
+
+    private void touch_move(float x, float y) {
+        float dx = Math.abs(x - mX);
+        float dy = Math.abs(y - mY);
+        if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
+            mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
+            mX = x;
+            mY = y;
+        }
+        //IsDrawNowPath = true;
+    }
+
+    private void resetPaint(){
+        paint = new Paint();
+        paint.setColor(Color.RED);
+        paint.setStrokeWidth(10);
+        paint.setAlpha(255);
+        paint.setAntiAlias(true);
+        paint.setDither(true);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setPathEffect(new CornerPathEffect(100));
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeJoin(Paint.Join.ROUND);
+    }
+
+    private void touch_up() {
+        mPath.lineTo(mX, mY);
+        mHistoryPath.add(mPath);
+        mHistoryPathInfo.add(new Pair<Path, Paint>(mPath, paint));
+        mPath = new Path();
+        resetPaint();
     }
 
     private PointF mid(MotionEvent event) {

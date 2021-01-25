@@ -21,7 +21,7 @@ public class PostTranslateActivity extends AppCompatActivity {
         setContentView(R.layout.activity_post_translate);
         img = findViewById(R.id.img);
         Bitmap icon = BitmapFactory.decodeResource(getResources(),
-                R.drawable.btn_function_round_fav_b);
+                R.drawable.test);
         img.setBitmap(icon);
         Button scaleBt = findViewById(R.id.scaleBt);
         scaleBt.setOnClickListener(new View.OnClickListener() {

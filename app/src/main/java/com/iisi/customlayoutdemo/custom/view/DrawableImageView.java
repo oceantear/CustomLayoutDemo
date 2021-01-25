@@ -23,9 +23,10 @@ import java.util.List;
 
 public class DrawableImageView extends AppCompatImageView implements View.OnTouchListener
 {
-    private  static final int MODE_DRAW = 1;
-    private static final int MODE_ZOOM_SCALE = 2;
-    private int mode = 0;//normal mode
+    private  static final int MODE_DRAW = 0;
+    private static final int MODE_DRAG = 1;
+    private int mode = MODE_DRAW;//normal mode
+    private boolean isScaleTranslationEnable = false;
 
     private Canvas mCanvas;
     private Paint paint;
@@ -48,13 +49,18 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
     private Matrix matrixBefore = new Matrix();
     private PointF startPoint = new PointF();
     private PointF nowPoint = new PointF();
+    private PointF lastPoint = new PointF();
     private PointF midPoint = new PointF(0,0);
     private Matrix mInitializationMatrix = new Matrix();//初始缩放值
     private PointF mInitializationScalePoint = new PointF();//初始缩放点
     private PointF mCurrentScalePoint = new PointF(0, 0);//当前缩放点
 
     private static final float MAX_SCALE = 4f, MIN_SCALE = 1f;//最大放大倍数，最小放大倍数
-    float total_scale = MIN_SCALE , current_scale;//total_scale缩放范围2-1，当小于1回弹到1；当大于2回弹到2
+    //float total_scale = MIN_SCALE , current_scale;//total_scale缩放范围2-1，当小于1回弹到1；当大于2回弹到2
+
+    private float totalTranslateX = 0;
+    private float totalTranslateY = 0;
+    private float totalRatio = 1f;
 
     public DrawableImageView(Context context)
     {
@@ -82,15 +88,18 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if(matrixNow != null){
-            canvas.drawBitmap(bp, matrixNow, mDrawableImagePaint);
-        }else
-            canvas.drawBitmap(bp, 0, 0, mDrawableImagePaint);
+        canvas.translate(totalTranslateX, totalTranslateY);
+        canvas.scale(totalRatio, totalRatio);
 
-        if(IsDrawNowPath){
+        /*if(matrixNow != null){
+            canvas.drawBitmap(bp, matrixNow, mDrawableImagePaint);
+        }else*/
+            canvas.drawBitmap(bp, 0, 0, null);
+
+        //if(IsDrawNowPath){
             canvas.drawPath(mPath, paint);
-            IsDrawNowPath = false;
-        }
+        //    IsDrawNowPath = false;
+        //}
 
         for(Pair<Path, Paint> p : mHistoryPathInfo) {
             canvas.drawPath(p.first, p.second);
@@ -211,6 +220,10 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
     private static final float TOUCH_TOLERANCE = 4;
 
     private void touch_start(float x, float y) {
+
+        x = (x - totalTranslateX) / totalRatio;
+        y = (y - totalTranslateY) / totalRatio;
+
         mPath.reset();
         mPath.moveTo(x, y);
         mX = x;
@@ -218,6 +231,10 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
     }
 
     private void touch_move(float x, float y) {
+
+        x = (x - totalTranslateX) / totalRatio;
+        y = (y - totalTranslateY) / totalRatio;
+
         float dx = Math.abs(x - mX);
         float dy = Math.abs(y - mY);
         if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
@@ -248,42 +265,86 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
             switch (action & MotionEvent.ACTION_MASK) {
                 case MotionEvent.ACTION_DOWN:
                     Log.e("iisi","ACTION_DOWN mode : "+mode);
+
                     mode = MODE_DRAW;
                     touch_start(x, y);
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:
                     Log.e("iisi","ACTION_POINTER_DOWN : "+mode);
-                    mode = MODE_ZOOM_SCALE;
+                    if(isScaleTranslationEnable)
+                        mode = MODE_DRAG;
                     startPoint.set(event.getX(), event.getY());
                     startDis = distance(event);
-                    if (startDis > 10f) {
+                    /*if (startDis > 10f) {
                         //紀錄縮放倍數
                         matrixBefore.set(getImageMatrix());
                         matrixNow.set(getImageMatrix());
+                    }*/
+
+                    if(lastPoint.x == 0.0f && lastPoint.y == 0.0f) {
+                        lastPoint.x = event.getX();
+                        lastPoint.y = event.getY();
                     }
+                    if(event.getAction() >> 8 == 0){
+                        lastPoint.x = event.getX();
+                        lastPoint.y = event.getY();
+                    }
+
                     break;
                 case MotionEvent.ACTION_MOVE:
                     Log.e("iisi","ACTION_MOVE : "+mode);
                     if(mode == MODE_DRAW) {
                         touch_move(x, y);
                         invalidate();
-                    }else if(mode == MODE_ZOOM_SCALE && event.getPointerCount() >= 2 ){
-                        nowPoint.set(event.getX(), event.getY());
-                        float endDis = distance(event);
+                    }else if(mode == MODE_DRAG && event.getPointerCount() >= 2 ){
+                        //nowPoint.set(event.getX(), event.getY());
+                        /*float endDis = distance(event);
                         float moveDis = Math.abs(endDis - startDis);
                         Log.e("iisi","start dis : "+ startDis + " end dis : " + endDis +" move distance : "+moveDis);
 
-                        if (moveDis > 10f) {
-                            midPoint = mid(event);
-                            current_scale = endDis / startDis;//缩放倍数
-                            total_scale *= current_scale;
-                            Log.e("iisi","total scale : "+total_scale + " current scale : "+current_scale);
+                        //if (moveDis > 10f) {
+                            float cX = 0.0f, cY = 0.0f;
+                            //midPoint = mid(event);
+                            PointF nowCenterPoint = new PointF(event.getX(), event.getY());
+                            cX = nowCenterPoint.x - lastPoint.x;
+                            cY = nowCenterPoint.y - lastPoint.y;
+                            totalTranslateX += cX;
+                            totalTranslateY += cY;
+
+
+                            float current_scale = endDis / startDis;//缩放倍数
+                            totalRatio *= current_scale;
+                            //Log.e("iisi","total scale : "+total_scale + " current scale : "+current_scale);
                             Log.e("iisi","mid x : "+midPoint.x + " mid y : "+midPoint.y);
                             //matrixNow.postTranslate((midPoint.x + event.getX()) /2, (midPoint.y + event.getY()) /2);
-                            matrixNow.postScale(current_scale, current_scale, midPoint.x, midPoint.y);
+                            //matrixNow.postScale(current_scale, current_scale, midPoint.x, midPoint.y);
+                            lastPoint.set(event.getX(), event.getY());
                             startDis = endDis;
-                            invalidate();
-                        }
+                            invalidate();*/
+                        //}
+
+                        PointF nowCenterPoint = new PointF(event.getX(), event.getY());
+
+                        float cX = 0.0f, cY = 0.0f;
+
+                        cX = nowCenterPoint.x - lastPoint.x;
+                        cY = nowCenterPoint.y - lastPoint.y;
+                        totalTranslateX += cX;
+                        totalTranslateY += cY;
+
+                        float endDis = distance(event);
+                        float current_scale = endDis / startDis;//缩放倍数
+                        totalRatio *= current_scale;
+
+                        startDis = endDis;
+
+                        Log.e("jimmy", "start x : " + lastPoint.x + " start y : " + lastPoint.y);
+                        Log.e("jimmy", "now x : " + nowCenterPoint.x + " now y : " + nowCenterPoint.y);
+                        Log.e("jimmy", "cX : " + cX + " cY : " + cY);
+
+                        lastPoint.set(event.getX(), event.getY());
+                        //matrixNow.postTranslate(cX, cY);
+                        invalidate();
                     }
 
                     break;
@@ -291,20 +352,20 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
                     Log.e("iisi","ACTION_UP : "+mode);
                     if(mode == MODE_DRAW)
                         touch_up();
-                    else if(mode == MODE_ZOOM_SCALE)
+                    else if(mode == MODE_DRAG) {
                         mode = MODE_DRAW;
+                        lastPoint = new PointF();
+                    }
                     break;
                 case MotionEvent.ACTION_POINTER_UP:
                     Log.e("iisi","ACTION_POINTER_UP : "+mode);
-                    if(mode == MODE_ZOOM_SCALE) {
-                        //checkZoomValid();
-                        /*postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                mode = MODE_DRAG;
+                    if(mode == MODE_DRAG) {
+                        if (event.getPointerCount() > 2) {
+                            if (event.getAction() >> 8 == 0) {
+                                lastPoint.x = event.getX(1);
+                                lastPoint.y = event.getY(1);
                             }
-                        },500);*/
-
+                        }
                     }
                     break;
                 case MotionEvent.ACTION_CANCEL:
@@ -339,7 +400,7 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
         return new PointF(midX, midY);
     }
 
-    private boolean checkZoomValid() {
+    /*private boolean checkZoomValid() {
         if(mode == MODE_ZOOM_SCALE){
             if(total_scale > MAX_SCALE){
                 Log.e("iisi", "大於 最大scale");
@@ -359,16 +420,16 @@ public class DrawableImageView extends AppCompatImageView implements View.OnTouc
             invalidate();
         }
         return true;
-    }
+    }*/
 
 
     //最小重置数值
     private void resetToMinStatus(){
         mCurrentScalePoint.set(0, 0);
-        total_scale = MIN_SCALE;
+        //total_scale = MIN_SCALE;
     }
     //最大重置数值
     private void resetToMaxStatus(){
-        total_scale = MAX_SCALE;
+        //total_scale = MAX_SCALE;
     }
 }
