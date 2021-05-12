@@ -1,6 +1,8 @@
 package com.iisi.customlayoutdemo;
 
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,5 +29,12 @@ public class TestActivity extends AppCompatActivity {
                 "                \"林柏齊預估，明年全球智慧型手機出貨量約13.55億支，其中5G機種約5.39億支，估滲透率達39.8%。" +
                 "");
         tv.setMovementMethod(ScrollingMovementMethod.getInstance());*/
+
+        mCustomTxt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.e("jimmy", "click!!!");
+            }
+        });
     }
 }

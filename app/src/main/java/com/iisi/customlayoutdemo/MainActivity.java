@@ -1,6 +1,7 @@
 package com.iisi.customlayoutdemo;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LifecycleObserver;
 
 import android.content.Context;
 import android.content.Intent;
@@ -17,6 +18,8 @@ import com.iisi.customlayoutdemo.ImageEditor.ScreenShotActivity;
 import com.iisi.customlayoutdemo.custom.view.FlowLayout;
 import com.iisi.customlayoutdemo.custom.view.PostScaleImageView;
 import com.iisi.customlayoutdemo.custom.view.WrapLayout;
+import com.iisi.customlayoutdemo.databinding.ActivityMainBinding;
+import com.iisi.customlayoutdemo.lifecycle.LifeCycleActivity;
 import com.iisi.customlayoutdemo.vo.FlowLayoutContent;
 
 import java.util.ArrayList;
@@ -35,53 +38,58 @@ public class MainActivity extends AppCompatActivity {
             "材料科學","環境科學","小花","小明","板橋火車站","台北火車站","今天天氣很好","明天會下雨"};
     private List<String> content;
 
+    private ActivityMainBinding binding;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        Button autoBt = (Button) findViewById(R.id.autoBt);
-        autoBt.setOnClickListener(new View.OnClickListener() {
+        //setContentView(R.layout.activity_main);
+
+        //Button autoBt = (Button) findViewById(R.id.autoBt);
+        binding.autoBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, TestActivity.class));
             }
         });
 
-        Button flowBt= (Button) findViewById(R.id.flowBt);
-        flowBt.setOnClickListener(new View.OnClickListener() {
+        //Button flowBt= (Button) findViewById(R.id.flowBt);
+        binding.flowBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, FlowLayoutActivity.class));
             }
         });
 
-        Button chipBt = (Button) findViewById(R.id.chipBt);
-        chipBt.setOnClickListener(new View.OnClickListener() {
+        //Button chipBt = (Button) findViewById(R.id.chipBt);
+        binding.chipBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, ChipActivity.class));
             }
         });
 
-        Button rotationBt = (Button) findViewById(R.id.rotationBt);
-        rotationBt.setOnClickListener(new View.OnClickListener() {
+        //Button rotationBt = (Button) findViewById(R.id.rotationBt);
+        binding.rotationBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, RotationActivity.class));
             }
         });
 
-        Button buyCarBt = (Button) findViewById(R.id.buyCarBt);
-        buyCarBt.setOnClickListener(new View.OnClickListener() {
+        //Button buyCarBt = (Button) findViewById(R.id.buyCarBt);
+        binding.buyCarBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, BuyCarActivity.class));
             }
         });
 
-        Button drawImageBt = (Button) findViewById(R.id.drawImageBt);
-        drawImageBt.setOnClickListener(new View.OnClickListener() {
+        //Button drawImageBt = (Button) findViewById(R.id.drawImageBt);
+        binding.drawImageBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, DrawImageActivity.class));
@@ -89,43 +97,74 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        Button ovalImageBt = (Button) findViewById(R.id.ovalImageBt);
-        ovalImageBt.setOnClickListener(new View.OnClickListener() {
+        //Button ovalImageBt = (Button) findViewById(R.id.ovalImageBt);
+        binding.ovalImageBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, OvalActivity.class));
             }
         });
 
-        Button maskImageBt = (Button) findViewById(R.id.maskImageBt);
-        maskImageBt.setOnClickListener(new View.OnClickListener() {
+        //Button maskImageBt = (Button) findViewById(R.id.maskImageBt);
+        binding.maskImageBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, MaskActivity.class));
             }
         });
 
-        Button screenShotBt = (Button) findViewById(R.id.screenShotBt);
-        screenShotBt.setOnClickListener(new View.OnClickListener() {
+        //Button screenShotBt = (Button) findViewById(R.id.screenShotBt);
+        binding.screenShotBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, ScreenShotActivity.class));
             }
         });
 
-        Button postTranslateBt = (Button) findViewById(R.id.postTranslateBt);
-        postTranslateBt.setOnClickListener(new View.OnClickListener() {
+        //Button postTranslateBt = (Button) findViewById(R.id.postTranslateBt);
+        binding.postTranslateBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, PostTranslateActivity.class));
             }
         });
 
-        Button postScaleBt = (Button) findViewById(R.id.postScaleBt);
-        postScaleBt.setOnClickListener(new View.OnClickListener() {
+        //Button postScaleBt = (Button) findViewById(R.id.postScaleBt);
+        binding.postScaleBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, PostScaleActivity.class));
+            }
+        });
+
+        //Button centerScaleBt = (Button) findViewById(R.id.centerScaleBt);
+        binding.centerScaleBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, CenterScaleActivity.class));
+            }
+        });
+
+        //Button TabBt = (Button) findViewById(R.id.TabBt);
+        binding.TabBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, TabActivity.class));
+            }
+        });
+
+        //Button lifeCycleBt = findViewById(R.id.lifeCycleBt);
+        binding.lifeCycleBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, LifeCycleActivity.class));
+            }
+        });
+
+        binding.BannerBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, BannerActivity.class));
             }
         });
 

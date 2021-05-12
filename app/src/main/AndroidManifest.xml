@@ -3,6 +3,7 @@
     package="com.iisi.customlayoutdemo">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:icon="@mipmap/ic_launcher"
@@ -40,7 +41,10 @@
         <activity android:name="com.iisi.customlayoutdemo.ImageEditor.EditImageActivity"/>
         <activity android:name="com.iisi.customlayoutdemo.PostTranslateActivity"/>
         <activity android:name="com.iisi.customlayoutdemo.PostScaleActivity"/>
-
+        <activity android:name="com.iisi.customlayoutdemo.CenterScaleActivity"/>
+        <activity android:name="com.iisi.customlayoutdemo.TabActivity"/>
+        <activity android:name="com.iisi.customlayoutdemo.lifecycle.LifeCycleActivity"/>
+        <activity android:name=".BannerActivity"/>
 
     </application>
 

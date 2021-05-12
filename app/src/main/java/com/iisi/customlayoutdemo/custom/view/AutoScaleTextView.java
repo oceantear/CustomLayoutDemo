@@ -41,6 +41,7 @@ public class AutoScaleTextView extends AppCompatTextView {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        super.onTouchEvent(event);
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
                 //Log.e("iisi","ACTION_DOWN");
